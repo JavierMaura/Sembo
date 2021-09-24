@@ -1,0 +1,10 @@
+﻿Project created using template ASP.NET Core Web API from Visual Studio 2019
+
+To hash the email, i've used https://passwordsgenerator.net/sha1-hash-generator/
+
+PostMan to test the response from Sembo's API
+
+To convert the JSON response to C#, i've used https://json2csharp.com/
+
+Looking the respone i've noticed that the hotels can be repeated, so i should not take the Top 3 but the DISTINCT Top 3
+
