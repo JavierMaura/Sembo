@@ -6,5 +6,9 @@ PostMan to test the response from Sembo's API
 
 To convert the JSON response to C#, i've used https://json2csharp.com/
 
-Looking the respone i've noticed that the hotels can be repeated, so i should not take the Top 3 but the DISTINCT Top 3
+I've added a GlobalData class to make the code more clear.
+
+Looking the respone i've noticed that the hotels can be repeated, so i should not take the Top 3 but the DISTINCT Top 3.
+
+I've tried the parallel loop but it gives me some exceptions, so i've used the task approach. Net 6 comes with a new ParallelLoopAsync method that could be helpful.
 

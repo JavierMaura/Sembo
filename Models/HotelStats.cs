@@ -10,6 +10,7 @@ namespace Sembo.Models
     /// </summary>
     public class HotelStats
     {
+
         /// <summary>
         /// Country name
         /// </summary>
@@ -24,5 +25,10 @@ namespace Sembo.Models
         /// Top hotel list sortered by score
         /// </summary>
         public string TopHotels { get; set; }
+
+        /// <summary>
+        /// a TimeStamp to check if parallelism is working fine
+        /// </summary>
+        public DateTime TimeStamp { get; set; } = DateTime.Now;
     }
 }
