@@ -8,7 +8,12 @@ To convert the JSON response to C#, i've used https://json2csharp.com/
 
 I've added a GlobalData class to make the code more clear.
 
-Looking the respone i've noticed that the hotels can be repeated, so i should not take the Top 3 but the DISTINCT Top 3.
+Looking the response i've noticed that the hotels can be repeated, so i should not take the Top 3 but the DISTINCT Top 3.
 
 I've tried the parallel loop but it gives me some exceptions, so i've used the task approach. Net 6 comes with a new ParallelLoopAsync method that could be helpful.
 
+I've added a log because some time the API returns only two values!!!! And of course, NOT in my debug computer...It was cheating in my final test computer, where i run the app with dotnet run :(
+
+After a lot of time debugging, i realized that the problem comes with List<>. Changed to SynchronizedCollection makes my day!!!
+
+I've decided to use Blazor because i like a lot new technologies and try to test them to know them. 

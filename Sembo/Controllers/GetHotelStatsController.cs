@@ -99,12 +99,9 @@ namespace Sembo.Controllers
                 // Get the data from API
                 var hotelStat = await GetHotelByCountryAsync(GUID, isoCode);
 
-                _logger.LogInformation(GUID + $". Get. Add {isoCode}");
-
                 // Add it to the result
                 result.Add(hotelStat);
 
-                _logger.LogInformation(GUID + $". Get. Added {isoCode} {hotelStat.Country}");
             });
 
             // Wait to finish
@@ -119,7 +116,7 @@ namespace Sembo.Controllers
         }
 
         /// <summary>
-        /// Calls to Sembo's API to get the data needed
+        /// Main loop with retry check
         /// </summary>
         /// <param name="isoCountry"></param>
         /// <returns></returns>
@@ -135,12 +132,16 @@ namespace Sembo.Controllers
 
                     string url = GetCountryURL(isoCountry);
 
+                    // Try it some times
+
                     for (int i = 0; i < NUMTRIES; i++)
                     {
                         var result = await GetHotelByCountryInLoopAsync(logGUID, httpClient, isoCountry, url);
 
                         if (result != null)
                         {
+                            // Store the loop value when we get data
+
                             result.NumTries = i;
 
                             return result;
@@ -148,17 +149,27 @@ namespace Sembo.Controllers
                         }
                     }
 
-                    // Service unavailable after retries. Returns an empty object
+                    // If we can not access data, return Service unavailable
 
                     return new HotelStats(GlobalData.ISO2Country(isoCountry), "Service unavailable", NUMTRIES);
                 }
             }
             catch (Exception ex)
             {
+                // If we have an exception, return Exception
+
                 return new HotelStats(GlobalData.ISO2Country(isoCountry), "Exception: " + ex.Message, -1);
             }
         }
 
+        /// <summary>
+        /// Calls to Sembo's API to get the data needed
+        /// </summary>
+        /// <param name="logGUID"></param>
+        /// <param name="httpClient"></param>
+        /// <param name="isoCountry"></param>
+        /// <param name="url"></param>
+        /// <returns></returns>
         async Task<HotelStats> GetHotelByCountryInLoopAsync(string logGUID, HttpClient httpClient, string isoCountry, string url)
         {
             _logger.LogInformation(logGUID + $". GetHotelByCountryInLoop. Country:{isoCountry}");
@@ -203,13 +214,9 @@ namespace Sembo.Controllers
         /// <returns></returns>
         HotelStats ComputeRequeriments(string logGUID, string isoCountry, string apiResponse)
         {
-            _logger.LogInformation(logGUID + $". ComputeRequeriments. Country:{isoCountry}");
-
             // Convert to a List
 
             var hotelByCountryResult = JsonSerializer.Deserialize<APIResponse>(apiResponse);
-
-            _logger.LogInformation(logGUID + $". ComputeRequeriments. Country:{isoCountry}. Deserialized");
 
             // Sort hotels by score and take only 3
             // BUT as hotels can be repeated, i should take the DISTINCT
@@ -221,13 +228,9 @@ namespace Sembo.Controllers
                                        select new { Name = g.Key, MaxScore = g.Max(s => s.score) };
 
 
-            _logger.LogInformation(logGUID + $". ComputeRequeriments. Country:{isoCountry}. hotelsByMaximumScore: {hotelsByMaximumScore.Count()}");
-
             // Then, order the result
 
             var top3HotelByScore = hotelsByMaximumScore.OrderByDescending(a => a.MaxScore).Take(3);
-
-            _logger.LogInformation(logGUID + $". ComputeRequeriments. Country:{isoCountry}. hotelsByMaximumScore: {hotelsByMaximumScore.Count()}.Ordered");
 
             // Add a new item to the list
 
