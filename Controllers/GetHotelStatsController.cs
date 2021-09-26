@@ -9,10 +9,14 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using Sembo.Models;
 
+// Much easier to understand. It's like a #DEFINE in C++, but with all the .Net Power.
 using APIResponse = System.Collections.Generic.List<Sembo.Models.HotelByCountry>;
 
 namespace Sembo.Controllers
 {
+    /// <summary>
+    /// Default (and unique) controller that returns a <see cref="HotelStats"/> list
+    /// </summary>
     [ApiController]
     [Route("[controller]")]
     public class GetHotelStatsController : ControllerBase
@@ -57,13 +61,13 @@ namespace Sembo.Controllers
         #region Methods
 
         /// <summary>
-        /// Get the final URL changing the {xx} internal code to the countryISOCode
+        /// Get the final URL adding the countryISOCode
         /// </summary>
         /// <param name="countryISOCode">A two digit country ISO Code</param>
         /// <returns></returns>
         string GetCountryURL(string countryISOCode)
         {
-            return GlobalData.SEMBOURL.Replace("{xx}", countryISOCode);
+            return GlobalData.SEMBOURLBASE + countryISOCode + GlobalData.SEMBOURLGETDATA;
         }
 
         /// <summary>
@@ -100,33 +104,40 @@ namespace Sembo.Controllers
         /// <returns></returns>
         async Task<HotelStats> GetHotelByCountry(string isoCountry)
         {
-            using (var httpClient = new HttpClient())
+            try
             {
-                // Add API Key
-
-                httpClient.DefaultRequestHeaders.Add("X-API-Key", apiKey);
-
-                string url = GetCountryURL(isoCountry);
-
-                using (var response = await httpClient.GetAsync(url))
+                using (var httpClient = new HttpClient())
                 {
-                    string apiResponse = await response.Content.ReadAsStringAsync();
+                    // Add API Key
 
-                    if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                    httpClient.DefaultRequestHeaders.Add("X-API-Key", apiKey);
+
+                    string url = GetCountryURL(isoCountry);
+
+                    using (var response = await httpClient.GetAsync(url))
                     {
-                        // Process the data
+                        string apiResponse = await response.Content.ReadAsStringAsync();
 
-                        var result = ComputeRequeriments(isoCountry,apiResponse);
+                        if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                        {
+                            // Process the data
 
-                        return result;
-                    }
-                    else
-                    {
-                        // Service unavailable. Returns an empty object
+                            var result = ComputeRequeriments(isoCountry, apiResponse);
 
-                        return new HotelStats();
+                            return result;
+                        }
+                        else
+                        {
+                            // Service unavailable. Returns an empty object
+
+                            return new HotelStats("Service unavailable");
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                return new HotelStats("Exception: " + ex.Message);
             }
         }
 
@@ -136,7 +147,7 @@ namespace Sembo.Controllers
         /// <param name="isoCountry"></param>
         /// <param name="apiResponse"></param>
         /// <returns></returns>
-        HotelStats ComputeRequeriments(string isoCountry,string apiResponse)
+        HotelStats ComputeRequeriments(string isoCountry, string apiResponse)
         {
             // Convert to a List
 
@@ -157,15 +168,17 @@ namespace Sembo.Controllers
 
             // Add a new item to the list
 
-            var result = new HotelStats()
-            {
-                Country = GlobalData.ISO2Country(isoCountry),
+            var result = new HotelStats(
 
-                AverageScore = hotelByCountryResult.Average(a => a.score),
+                country: GlobalData.ISO2Country(isoCountry),
 
-                TopHotels = string.Join(',', top3HotelByScore.Select(a => a.Name))    // Joins string, separated by a ,
+                score: hotelByCountryResult.Average(a => a.score),
 
-            };
+                top: string.Join(',', top3HotelByScore.Select(a => a.Name))    // Joins string, separated by a ,
+
+                );
+
+            
 
             return result;
         }

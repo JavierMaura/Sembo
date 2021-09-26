@@ -23,9 +23,14 @@ namespace Sembo
         public const string APIKEYNAME = "APIKey";
 
         /// <summary>
-        /// URL to get the data. IMPORTANT DO NOT USE BEFORE CHANGE {xx} TO ISO COUNTRY
+        /// Base URL to get the data. 
         /// </summary>
-        public const string SEMBOURL = "https://developers.sembo.com/sembo/hotels-test/countries/{xx}/hotels";
+        public const string SEMBOURLBASE = "https://developers.sembo.com/sembo/hotels-test/countries/";
+
+        /// <summary>
+        /// Final controller to add to <see cref="SEMBOURLBASE"/>
+        /// </summary>
+        public const string SEMBOURLGETDATA = "/hotels";
 
         /// <summary>
         /// Returns the country name given a ISO
