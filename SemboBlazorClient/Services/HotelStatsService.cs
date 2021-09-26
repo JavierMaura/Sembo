@@ -19,7 +19,7 @@ namespace SemboBlazorClient.Services
         /// <summary>
         /// Web API base url
         /// </summary>
-        const string APIBASEURL = "https://localhost:44392/";
+        const string APIBASEURL = "https://localhost:44364/";
 
         /// <summary>
         /// Injected from Blazor

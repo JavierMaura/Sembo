@@ -31,7 +31,7 @@ namespace Sembo
                 options.AddPolicy("NonRestrictivePolicy",
                     builder =>
                     {
-                        builder.WithOrigins("https://localhost:44364")
+                        builder.WithOrigins("https://localhost:44392")
                                             .AllowAnyHeader()
                                             .AllowAnyMethod();
                     });
