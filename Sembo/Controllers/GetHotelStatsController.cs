@@ -88,19 +88,23 @@ namespace Sembo.Controllers
 
             string GUID = Guid.NewGuid().ToString();
 
-            _logger.LogInformation(GUID+". Get");
+            _logger.LogInformation(GUID + ". Get");
 
-            var result = new List<HotelStats>();
+            var result = new SynchronizedCollection<HotelStats>();
 
             // For all the countries, a task is created
 
             var tasks = GlobalData.countries.Keys.Select(async isoCode =>
             {
                 // Get the data from API
-                var hotelStat = await GetHotelByCountry(isoCode);
+                var hotelStat = await GetHotelByCountryAsync(GUID, isoCode);
+
+                _logger.LogInformation(GUID + $". Get. Add {isoCode}");
 
                 // Add it to the result
                 result.Add(hotelStat);
+
+                _logger.LogInformation(GUID + $". Get. Added {isoCode} {hotelStat.Country}");
             });
 
             // Wait to finish
@@ -108,8 +112,8 @@ namespace Sembo.Controllers
             await Task.WhenAll(tasks);
 
             // Simple log
-            foreach(var item in result)
-                _logger.LogInformation(GUID+". "+item.Country+" "+item.AverageScore);
+            foreach (var item in result)
+                _logger.LogInformation(GUID + $". Get. Result: {item.Country} {item.AverageScore}");
 
             return Ok(result);
         }
@@ -119,7 +123,7 @@ namespace Sembo.Controllers
         /// </summary>
         /// <param name="isoCountry"></param>
         /// <returns></returns>
-        async Task<HotelStats> GetHotelByCountry(string isoCountry)
+        async Task<HotelStats> GetHotelByCountryAsync(string logGUID, string isoCountry)
         {
             try
             {
@@ -133,9 +137,9 @@ namespace Sembo.Controllers
 
                     for (int i = 0; i < NUMTRIES; i++)
                     {
-                        var result = await GetHotelByCountryInLoop(httpClient, isoCountry, url);
+                        var result = await GetHotelByCountryInLoopAsync(logGUID, httpClient, isoCountry, url);
 
-                        if(result!=null)
+                        if (result != null)
                         {
                             result.NumTries = i;
 
@@ -146,26 +150,30 @@ namespace Sembo.Controllers
 
                     // Service unavailable after retries. Returns an empty object
 
-                    return new HotelStats(GlobalData.ISO2Country(isoCountry), "Service unavailable",NUMTRIES);
+                    return new HotelStats(GlobalData.ISO2Country(isoCountry), "Service unavailable", NUMTRIES);
                 }
             }
             catch (Exception ex)
             {
-                return new HotelStats(GlobalData.ISO2Country(isoCountry), "Exception: " + ex.Message,-1);
+                return new HotelStats(GlobalData.ISO2Country(isoCountry), "Exception: " + ex.Message, -1);
             }
         }
 
-        async Task<HotelStats> GetHotelByCountryInLoop(HttpClient httpClient,string isoCountry,string url)
+        async Task<HotelStats> GetHotelByCountryInLoopAsync(string logGUID, HttpClient httpClient, string isoCountry, string url)
         {
+            _logger.LogInformation(logGUID + $". GetHotelByCountryInLoop. Country:{isoCountry}");
+
             using (var response = await httpClient.GetAsync(url))
             {
                 string apiResponse = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation(logGUID + $". GetHotelByCountryInLoop. Country:{isoCountry} Response:{response.StatusCode}");
 
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     // Process the data
 
-                    var result = ComputeRequeriments(isoCountry, apiResponse);
+                    var result = ComputeRequeriments(logGUID, isoCountry, apiResponse);
 
                     return result;
                 }
@@ -179,7 +187,7 @@ namespace Sembo.Controllers
                 else
                 {
                     // Maybe a server connection problema...So wait more time
-                    await Task.Delay(TimeSpan.FromSeconds(300));
+                    await Task.Delay(TimeSpan.FromMilliseconds(300));
 
                 }
             }
@@ -193,11 +201,15 @@ namespace Sembo.Controllers
         /// <param name="isoCountry"></param>
         /// <param name="apiResponse"></param>
         /// <returns></returns>
-        HotelStats ComputeRequeriments(string isoCountry, string apiResponse)
+        HotelStats ComputeRequeriments(string logGUID, string isoCountry, string apiResponse)
         {
+            _logger.LogInformation(logGUID + $". ComputeRequeriments. Country:{isoCountry}");
+
             // Convert to a List
 
             var hotelByCountryResult = JsonSerializer.Deserialize<APIResponse>(apiResponse);
+
+            _logger.LogInformation(logGUID + $". ComputeRequeriments. Country:{isoCountry}. Deserialized");
 
             // Sort hotels by score and take only 3
             // BUT as hotels can be repeated, i should take the DISTINCT
@@ -208,9 +220,14 @@ namespace Sembo.Controllers
                                        group s by s.name into g
                                        select new { Name = g.Key, MaxScore = g.Max(s => s.score) };
 
+
+            _logger.LogInformation(logGUID + $". ComputeRequeriments. Country:{isoCountry}. hotelsByMaximumScore: {hotelsByMaximumScore.Count()}");
+
             // Then, order the result
 
             var top3HotelByScore = hotelsByMaximumScore.OrderByDescending(a => a.MaxScore).Take(3);
+
+            _logger.LogInformation(logGUID + $". ComputeRequeriments. Country:{isoCountry}. hotelsByMaximumScore: {hotelsByMaximumScore.Count()}.Ordered");
 
             // Add a new item to the list
 
@@ -224,7 +241,7 @@ namespace Sembo.Controllers
 
                 );
 
-            
+
 
             return result;
         }
