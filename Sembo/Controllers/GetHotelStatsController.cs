@@ -84,6 +84,12 @@ namespace Sembo.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
+            // Createa a GUId to identify start and end logs
+
+            string GUID = Guid.NewGuid().ToString();
+
+            _logger.LogInformation(GUID+". Get");
+
             var result = new List<HotelStats>();
 
             // For all the countries, a task is created
@@ -100,6 +106,10 @@ namespace Sembo.Controllers
             // Wait to finish
 
             await Task.WhenAll(tasks);
+
+            // Simple log
+            foreach(var item in result)
+                _logger.LogInformation(GUID+". "+item.Country+" "+item.AverageScore);
 
             return Ok(result);
         }
