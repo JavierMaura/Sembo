@@ -35,13 +35,15 @@ namespace Sembo.Shared.Models
         /// Constructor for an ErrorMessage
         /// </summary>
         /// <param name="errorMessage"></param>
-        public HotelStats(string country, string errorMessage)
+        public HotelStats(string country, string errorMessage,int numTries)
         {
             Country = country;
 
             this.ErrorMessage = errorMessage;
 
             TimeStamp = DateTime.Now;
+
+            NumTries = numTries;
         }
 
         /// <summary>
@@ -73,5 +75,7 @@ namespace Sembo.Shared.Models
         /// Error message recived from the API
         /// </summary>
         public string ErrorMessage { get; set; }
+
+        public int NumTries { get; set; }
     }
 }

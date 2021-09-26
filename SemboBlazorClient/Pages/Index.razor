@@ -20,6 +20,7 @@ else
                 <th>Average score</th>
                 <th>Top Hotels</th>
                 <th>TimeStamp</th>
+                <th>Retry count</th>
             </tr>
         </thead>
         <tbody>
@@ -32,6 +33,7 @@ else
                 <td>@stat.Country</td>
                 <td colspan="2">@stat.ErrorMessage</td>
                 <td>@stat.TimeStamp</td>
+                <td>@stat.NumTries</td>
             </tr>
 
                 }
@@ -43,6 +45,7 @@ else
             <td class="text-right">@stat.AverageScore</td>
             <td>@stat.TopHotels</td>
             <td>@stat.TimeStamp</td>
+            <td>@stat.NumTries</td>
         </tr>
                 }
             }

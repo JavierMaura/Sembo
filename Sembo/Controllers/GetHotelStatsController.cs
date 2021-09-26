@@ -22,6 +22,11 @@ namespace Sembo.Controllers
     [Route("[controller]")]
     public class GetHotelStatsController : ControllerBase
     {
+        /// <summary>
+        /// Try count due to API failure
+        /// </summary>
+        const int NUMTRIES = 3;
+
         #region Fields
 
         /// <summary>
@@ -116,31 +121,60 @@ namespace Sembo.Controllers
 
                     string url = GetCountryURL(isoCountry);
 
-                    using (var response = await httpClient.GetAsync(url))
+                    for (int i = 0; i < NUMTRIES; i++)
                     {
-                        string apiResponse = await response.Content.ReadAsStringAsync();
+                        var result = await GetHotelByCountryInLoop(httpClient, isoCountry, url);
 
-                        if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                        if(result!=null)
                         {
-                            // Process the data
-
-                            var result = ComputeRequeriments(isoCountry, apiResponse);
+                            result.NumTries = i;
 
                             return result;
-                        }
-                        else
-                        {
-                            // Service unavailable. Returns an empty object
 
-                            return new HotelStats(GlobalData.ISO2Country(isoCountry), "Service unavailable");
                         }
                     }
+
+                    // Service unavailable after retries. Returns an empty object
+
+                    return new HotelStats(GlobalData.ISO2Country(isoCountry), "Service unavailable",NUMTRIES);
                 }
             }
             catch (Exception ex)
             {
-                return new HotelStats(GlobalData.ISO2Country(isoCountry), "Exception: " + ex.Message);
+                return new HotelStats(GlobalData.ISO2Country(isoCountry), "Exception: " + ex.Message,-1);
             }
+        }
+
+        async Task<HotelStats> GetHotelByCountryInLoop(HttpClient httpClient,string isoCountry,string url)
+        {
+            using (var response = await httpClient.GetAsync(url))
+            {
+                string apiResponse = await response.Content.ReadAsStringAsync();
+
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    // Process the data
+
+                    var result = ComputeRequeriments(isoCountry, apiResponse);
+
+                    return result;
+                }
+                else
+                if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
+                {
+                    // Service unavailable. let's try again after a little while...
+                    await Task.Delay(TimeSpan.FromMilliseconds(100));
+
+                }
+                else
+                {
+                    // Maybe a server connection problema...So wait more time
+                    await Task.Delay(TimeSpan.FromSeconds(300));
+
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

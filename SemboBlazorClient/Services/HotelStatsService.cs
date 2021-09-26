@@ -11,8 +11,19 @@ using APIResponse = System.Collections.Generic.List<Sembo.Shared.Models.HotelSta
 
 namespace SemboBlazorClient.Services
 {
+    /// <summary>
+    /// Services used for the app. 
+    /// </summary>
     public class HotelStatsService
     {
+        /// <summary>
+        /// Web API base url
+        /// </summary>
+        const string APIBASEURL = "https://localhost:44392/";
+
+        /// <summary>
+        /// Injected from Blazor
+        /// </summary>
         [Inject]
         private HttpClient Http { get; set; }
 
@@ -21,9 +32,13 @@ namespace SemboBlazorClient.Services
             Http = client;
         }
 
+        /// <summary>
+        /// Get HotelStats from API
+        /// </summary>
+        /// <returns></returns>
         public async Task<APIResponse> GetHotelStats()
         {
-            var data = await Http.GetFromJsonAsync<APIResponse>("https://localhost:44392/GetHotelStats");
+            var data = await Http.GetFromJsonAsync<APIResponse>(APIBASEURL+"GetHotelStats");
 
             return data;
         }
