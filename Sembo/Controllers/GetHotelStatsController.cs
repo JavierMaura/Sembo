@@ -7,10 +7,11 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Text.Json;
-using Sembo.Models;
+using Sembo.Shared.Models;
 
 // Much easier to understand. It's like a #DEFINE in C++, but with all the .Net Power.
 using APIResponse = System.Collections.Generic.List<Sembo.Models.HotelByCountry>;
+using Microsoft.AspNetCore.Cors;
 
 namespace Sembo.Controllers
 {
@@ -74,6 +75,7 @@ namespace Sembo.Controllers
         /// Main and UNIQUE Get Entry Point
         /// </summary>
         /// <returns>A List of <see cref="HotelStats"/></returns>
+        [EnableCors("NonRestrictivePolicy")]
         [HttpGet]
         public async Task<IActionResult> Get()
         {
@@ -130,14 +132,14 @@ namespace Sembo.Controllers
                         {
                             // Service unavailable. Returns an empty object
 
-                            return new HotelStats("Service unavailable");
+                            return new HotelStats(GlobalData.ISO2Country(isoCountry), "Service unavailable");
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                return new HotelStats("Exception: " + ex.Message);
+                return new HotelStats(GlobalData.ISO2Country(isoCountry), "Exception: " + ex.Message);
             }
         }
 

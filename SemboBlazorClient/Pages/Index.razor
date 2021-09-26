@@ -1,0 +1,63 @@
+﻿@page "/"
+
+@inject HttpClient Http
+
+<h1>Javier Maura's API test</h1>
+
+<p>This component demonstrates fetching data from the API.</p>
+
+@if (hotelStats == null)
+{
+    <p><em>Loading data...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Result</th>
+                <th>Country</th>
+                <th>Average score</th>
+                <th>Top Hotels</th>
+                <th>TimeStamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var stat in hotelStats)
+            {
+                @if (stat.ServiceError)
+                {
+            <tr>
+                <td><span class="badge badge-danger">No data</span></td>
+                <td>@stat.Country</td>
+                <td colspan="2">@stat.ErrorMessage</td>
+                <td>@stat.TimeStamp</td>
+            </tr>
+
+                }
+                else
+                {
+        <tr>
+            <td><span class="badge badge-success">&#x1F600;</span></td>
+            <td>@stat.Country</td>
+            <td class="text-right">@stat.AverageScore</td>
+            <td>@stat.TopHotels</td>
+            <td>@stat.TimeStamp</td>
+        </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Sembo.Shared.Models.HotelStats> hotelStats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var service = new Services.HotelStatsService(Http);
+
+        hotelStats = await service.GetHotelStats();
+    }
+
+}

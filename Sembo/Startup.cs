@@ -26,6 +26,16 @@ namespace Sembo
         public void ConfigureServices(IServiceCollection services)
         {
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("NonRestrictivePolicy",
+                    builder =>
+                    {
+                        builder.WithOrigins("https://localhost:44364")
+                                            .AllowAnyHeader()
+                                            .AllowAnyMethod();
+                    });
+            });
             services.AddControllers();
         }
 
@@ -42,6 +52,8 @@ namespace Sembo
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseCors();
 
             app.UseEndpoints(endpoints =>
             {
