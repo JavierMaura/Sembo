@@ -1,7 +1,7 @@
 c:
 md c:\SemboJMaura
 cd c:\SemboJMaura
-git clone --recursive https://github.com/JavierMaura/Sembo
+git clone https://github.com/JavierMaura/Sembo.git
 
 cd Sembo
 
